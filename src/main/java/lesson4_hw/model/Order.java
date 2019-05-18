@@ -21,6 +21,8 @@ public class Order {
     private Date dateTo;
     @Column(name = "MONEY_PAID")
     private double moneyPaid;
+    @Column(name = "AVIALABLE")
+    private boolean avialable;
 
     public Order() {
     }
@@ -31,6 +33,7 @@ public class Order {
         this.dateFrom = dateFrom;
         this.dateTo = dateTo;
         this.moneyPaid = moneyPaid;
+        this.avialable = true;
     }
 
     public Long getId() {
@@ -75,5 +78,13 @@ public class Order {
 
     public void setMoneyPaid(double moneyPaid) {
         this.moneyPaid = moneyPaid;
+    }
+
+    public boolean isAvialable() {
+        return avialable;
+    }
+
+    public void setAvialable(boolean avialable) {
+        this.avialable = avialable;
     }
 }

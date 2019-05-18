@@ -1,6 +1,8 @@
 package lesson4_hw.model;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 @Entity
 @Table(name = "ROOMS")
@@ -18,7 +20,8 @@ public class Room {
     private boolean breakfastIncluded;
     @Column(name = "ROOM_RETS_ALLOVED")
     private boolean petsAllowed;
-    @Column(name = "ROOM_DETE_AVIABLE_FROM", nullable = false)
+    @Temporal(TemporalType.DATE)
+    @Column(name = "ROOM_DATE_AVIABLE_FROM", nullable = false)
     private Date dateAvailableFrom;
     //@ManyToOne (cascade = CascadeType.ALL)
     @ManyToOne
@@ -91,14 +94,17 @@ public class Room {
 
     @Override
     public String toString() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd");
+
+
         return "Room{" +
-                "id=" + id +
-                ", numberOfGuests=" + numberOfGuests +
-                ", price=" + price +
-                ", breakfastIncluded=" + breakfastIncluded +
-                ", petsAllowed=" + petsAllowed +
-                ", dateAvailableFrom=" + dateAvailableFrom +
-                ", hotel=" + hotel +
+                "id= " + id +
+                ", numberOfGuests= " + numberOfGuests +
+                ", price= " + price +
+                ", breakfastIncluded= " + breakfastIncluded +
+                ", petsAllowed= " + petsAllowed +
+                ", dateAvailableFrom= " + sdf.format(dateAvailableFrom)+
+                ", hotel= " + hotel +
                 '}';
     }
 }

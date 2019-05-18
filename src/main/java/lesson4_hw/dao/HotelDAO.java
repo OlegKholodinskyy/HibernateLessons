@@ -3,19 +3,48 @@ package lesson4_hw.dao;
 import lesson4_hw.Exception.BadRequestException;
 import lesson4_hw.Exception.ObjectNotFoundInBDException;
 import lesson4_hw.model.Hotel;
+import lesson4_hw.model.Room;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import javax.persistence.NoResultException;
+import java.util.Date;
+import java.util.List;
 
 public class HotelDAO extends SessionFactoryBuilder {
+
+    public static Hotel findHotelByName(String name) {
+        Session session = null;
+        Transaction tr = null;
+        Hotel hotel = null;
+        try {
+            session = createSessionFactory().openSession();
+            tr = session.getTransaction();
+            tr.begin();
+            Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS where  HOTEL_NAME =?").addEntity(Hotel.class);
+            sqlQuery.setParameter(0, name);
+            try {
+                hotel = (Hotel) sqlQuery.getSingleResult();
+                tr.commit();
+            }catch (NoResultException e){
+                return null;
+            }
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            if (session != null)
+                session.close();
+        }
+        return hotel;
+    }
+
     public Hotel save(Hotel hotel) {
         Session session = null;
         Transaction tr = null;
         try {
-            session = SessionFactoryBuilder.createSessionFactory().openSession();
+            session = createSessionFactory().openSession();
             tr = session.getTransaction();
             tr.begin();
             session.save(hotel);
@@ -30,8 +59,9 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (session != null)
                 session.close();
         }
-    return hotel;
+        return hotel;
     }
+
     public void delete(long id) throws ObjectNotFoundInBDException {
         Hotel hotel = findById(id);
         if (hotel == null) {
@@ -113,30 +143,31 @@ public class HotelDAO extends SessionFactoryBuilder {
         return hotel;
     }
 
-    public void checkIfHotelIsExist(Hotel hotel) throws BadRequestException {
-        Session session = null;
+    public List<Hotel> findHotelByCity(String city) {
+        Session session =null;
         Transaction tr = null;
-        Hotel hotel1 = null;
+        List <Hotel> hotels =null;
         try {
             session = createSessionFactory().openSession();
             tr = session.getTransaction();
             tr.begin();
-            Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS WHERE HOTEL_NAME =? AND HOTEL_CITY= ?").addEntity(Hotel.class);
-            sqlQuery.setParameter(0, hotel.getName());
-            sqlQuery.setParameter(1, hotel.getCity());
-            try {
-                hotel1 = (Hotel) sqlQuery.getSingleResult();
-            } catch (NoResultException e) {
-                return;
-            }
+            session = createSessionFactory().openSession();
+            tr = session.getTransaction();
+            tr.begin();
+            Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS where  HOTEL_CITY =?").addEntity(Hotel.class);
+            sqlQuery.setParameter(0, city);
+            hotels = sqlQuery.list();
         } catch (HibernateException e) {
             System.out.println(e.getMessage());
-        } finally {
-            if (session != null) {
-                session.close();
+            if (tr != null) {
+                tr.rollback();
             }
+        } finally {
+            if (session != null)
+                session.close();
         }
-        throw new BadRequestException("Hotel with name = " + hotel.getName() + "and city = " + hotel.getCity()+ "  is already registred.");
+        return hotels;
     }
+
 
 }

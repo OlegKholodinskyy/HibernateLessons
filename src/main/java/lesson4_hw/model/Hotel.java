@@ -14,7 +14,7 @@ public class Hotel {
     private String name;
     @Column(name = "HOTEL_COUNTRY", nullable = false)
     private String country;
-    @Column(name = "HOTEL_SITY", nullable = false)
+    @Column(name = "HOTEL_CITY", nullable = false)
     private String city;
     @Column(name = "HOTEL_STREET", nullable = false)
     private String street;

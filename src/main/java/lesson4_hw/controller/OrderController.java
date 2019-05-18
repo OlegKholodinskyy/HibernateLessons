@@ -1,6 +1,9 @@
 package lesson4_hw.controller;
 
+import lesson4_hw.Exception.PermissionException;
 import lesson4_hw.model.Order;
+import lesson4_hw.model.User;
+import lesson4_hw.service.CurrentUser;
 import lesson4_hw.service.OrderService;
 
 public class OrderController implements ObjectController<Order>{
@@ -8,17 +11,31 @@ public class OrderController implements ObjectController<Order>{
 
     @Override
     public Order save(Order order) {
-        return orderService.save(order);
+        try {
+            return orderService.save(order, CurrentUser.currentLoggedUser);
+        } catch (PermissionException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 
     @Override
     public void delete(long id) {
-        orderService.delete(id);
+        try {
+            orderService.delete(id,CurrentUser.currentLoggedUser);
+        } catch (PermissionException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
     public Order update(Order order) {
-        return orderService.update(order);
+        try {
+            return orderService.update(order, CurrentUser.currentLoggedUser);
+        } catch (PermissionException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 
     @Override

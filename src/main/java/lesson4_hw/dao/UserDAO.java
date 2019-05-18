@@ -94,7 +94,7 @@ public class UserDAO extends SessionFactoryBuilder {
         }
     }
 
-    public User findById(long id) {
+    public  User findById(long id) {
         Session session = null;
         Transaction tr = null;
         User user = null;
@@ -140,6 +140,32 @@ public class UserDAO extends SessionFactoryBuilder {
             }
         }
         throw new BadRequestException("User with name " + userName + "is already registred.");
+    }
+
+    public User getUserByLoginAndPass(String userName, String password) throws BadRequestException {
+        Session session = null;
+        Transaction tr = null;
+        User user = null;
+        try {
+            session = createSessionFactory().openSession();
+            tr = session.getTransaction();
+            tr.begin();
+            Query sqlQuery = session.createSQLQuery("SELECT * FROM USERS where USER_NAME =? AND USER_PASSWORD = ?").addEntity(User.class);
+            sqlQuery.setParameter(0, userName);
+            sqlQuery.setParameter(1, password);
+               try {
+                   user = (User) sqlQuery.getSingleResult();
+               } catch (NoResultException e) {
+                   throw new BadRequestException("Login fail. Check login and Password");
+               }
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+        return user;
     }
 }
 

@@ -10,7 +10,7 @@ import static javax.persistence.CascadeType.ALL;
 @Table(name = "USERS")
 public class User {
     @Id
-    @SequenceGenerator(name = "User_seq" , sequenceName = "USER_SEQENSE")
+    @SequenceGenerator(name = "User_seq", sequenceName = "USER_SEQENSE")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "User_seq")
     @Column(name = "USER_ID", nullable = false, unique = true)
     private Long id;
@@ -20,10 +20,10 @@ public class User {
     private String password;
     @Column(name = "USER_COUNTRY", length = 40)
     private String country;
-    @Column(name="USER_TYPE", length=10, nullable=false)
+    @Column(name = "USER_TYPE", length = 10, nullable = false)
     private UserType userType;
-    @OneToMany(cascade=ALL, mappedBy="userOrdered")
-    @Column(name="ID_ORDER")
+    @OneToMany(cascade = ALL, mappedBy = "userOrdered")
+    @Column(name = "ID_ORDER")
     private List<Order> orders;
 
     public User() {
