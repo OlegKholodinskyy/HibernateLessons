@@ -10,41 +10,39 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import javax.persistence.NoResultException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class HotelDAO extends SessionFactoryBuilder {
 
     public static Hotel findHotelByName(String name) {
-        Session session = null;
-        Transaction tr = null;
         Hotel hotel = null;
-        try {
-            session = createSessionFactory().openSession();
+        Transaction tr = null;
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
-            Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS where  HOTEL_NAME =?").addEntity(Hotel.class);
-            sqlQuery.setParameter(0, name);
-            try {
-                hotel = (Hotel) sqlQuery.getSingleResult();
-                tr.commit();
-            }catch (NoResultException e){
-                return null;
+
+            List<Hotel> hotels = findAllHotels();
+            for(Hotel hotel1 : hotels){
+                if(hotel1.getName().equals(name))
+                    return hotel1;
             }
+
+            tr.commit();
+
         } catch (HibernateException e) {
             System.out.println(e.getMessage());
-        } finally {
-            if (session != null)
-                session.close();
+            if (tr != null) {
+                tr.rollback();
+            }
         }
-        return hotel;
+        return null;
     }
 
     public Hotel save(Hotel hotel) {
-        Session session = null;
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             session.save(hotel);
@@ -55,22 +53,14 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return hotel;
     }
 
-    public void delete(long id) throws ObjectNotFoundInBDException {
-        Hotel hotel = findById(id);
-        if (hotel == null) {
-            throw new ObjectNotFoundInBDException("Hotel id : " + id + "not found in Data Base");
-        }
-        Session session = null;
+    public void delete(Hotel hotel)  {
+
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             session.delete(hotel);
@@ -81,25 +71,13 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
     }
 
-    public void update(Hotel hotel) throws ObjectNotFoundInBDException {
-            /*
-            1-found hotel
-            2-update if exist
-             */
-        Hotel hotelForUpdate = findById(hotel.getId());
-        if (hotelForUpdate == null) {
-            throw new ObjectNotFoundInBDException("Hotel id : " + hotel.getId() + "not found in Data Base");
-        }
-        Session session = null;
+    public void update(Hotel hotel, Hotel hotelForUpdate) {
+
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()){
             tr = session.getTransaction();
             tr.begin();
             hotelForUpdate.setStreet(hotel.getStreet());
@@ -115,18 +93,13 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
     }
 
     public Hotel findById(long id) {
-        Session session = null;
         Transaction tr = null;
         Hotel hotel = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()){
             tr = session.getTransaction();
             tr.begin();
             hotel = session.get(Hotel.class, id);
@@ -136,22 +109,14 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return hotel;
     }
 
     public List<Hotel> findHotelByCity(String city) {
-        Session session =null;
         Transaction tr = null;
-        List <Hotel> hotels =null;
-        try {
-            session = createSessionFactory().openSession();
-            tr = session.getTransaction();
-            tr.begin();
-            session = createSessionFactory().openSession();
+        List<Hotel> hotels = null;
+        try (Session session = createSessionFactory().openSession()){
             tr = session.getTransaction();
             tr.begin();
             Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS where  HOTEL_CITY =?").addEntity(Hotel.class);
@@ -162,12 +127,25 @@ public class HotelDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return hotels;
     }
 
+    public static  List<Hotel> findAllHotels() {
+        Transaction tr = null;
+        List<Hotel> hotels = null;
+        try (Session session = createSessionFactory().openSession()){
+            tr = session.getTransaction();
+            tr.begin();
+            Query sqlQuery = session.createSQLQuery("SELECT * FROM HOTELS").addEntity(Hotel.class);
+            hotels = sqlQuery.list();
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
+            if (tr != null) {
+                tr.rollback();
+            }
+        }
+        return hotels;
+    }
 
 }

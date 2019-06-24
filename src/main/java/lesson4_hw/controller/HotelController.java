@@ -1,6 +1,7 @@
 package lesson4_hw.controller;
 
 import lesson4_hw.Exception.BadRequestException;
+import lesson4_hw.Exception.ObjectNotFoundInBDException;
 import lesson4_hw.Exception.PermissionException;
 import lesson4_hw.model.Hotel;
 import lesson4_hw.model.User;
@@ -23,7 +24,7 @@ public class HotelController implements ObjectController<Hotel> {
     }
 
     @Override
-    public void delete(long id) {
+    public void delete(long id) throws ObjectNotFoundInBDException {
         try {
             hotelService.delete(id, CurrentUser.currentLoggedUser);
         } catch (PermissionException e) {
@@ -32,7 +33,7 @@ public class HotelController implements ObjectController<Hotel> {
     }
 
     @Override
-    public Hotel update(Hotel hotel) {
+    public Hotel update(Hotel hotel) throws ObjectNotFoundInBDException {
         try {
             return hotelService.update(hotel, CurrentUser.currentLoggedUser);
         } catch (PermissionException e) {

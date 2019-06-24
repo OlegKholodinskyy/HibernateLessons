@@ -23,13 +23,18 @@ public class Main {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
+
+        userController.login("IVAN", "xxx");
+        System.out.println(CurrentUser.currentLoggedUser);
 //        Hotel hotel = new Hotel();
-//        hotel.setName("3-TestHotel");
-//        hotel.setCity("TORONTO");
-//        hotel.setCountry("TestHotel");
-//        hotel.setStreet("TestHotel str.");
+//        hotel.setName("7-TestHotel");
+//        hotel.setCity("7--TORONTO");
+//        hotel.setCountry("7-TestHotel");
+//        hotel.setStreet("7-TestHotel str.");
 //        hotelController.save(hotel);
-//
+        userController.logout();
+
+
 //        Hotel hotel2 = new Hotel();
 //        hotel2.setName("4-TestHotel");
 //        hotel2.setCity("TORONTO");
@@ -64,10 +69,10 @@ public class Main {
 //        userController.delete(73);
 //        System.out.println("Delete done");
 //
-//        User testUser = userController.findById(52);
-//        System.out.println("Find by ID: " + testUser.toString());
-//        testUser.setUserName("ChangedUserName");
-//        userController.update(testUser);
+        User testUser = userController.findById(1);
+        System.out.println("Find by ID: " + testUser.toString());
+        testUser.setUserName("ChangedUserName-Oleg");
+        userController.update(testUser);
 
 //        Room testRoom = roomController.findById(57);
 //        System.out.println("Find by ID: " + testRoom.toString());
@@ -97,15 +102,14 @@ public class Main {
 //        } catch (ParseException e) {
 //            e.printStackTrace();
 //        }
-//todo if not found
-        //   userController.cancelReservation(72,51);
+           userController.cancelReservation(176,92);
 
 //        userController.login("IVAN", "xxx");
 //        System.out.println(CurrentUser.currentLoggedUser);
 //        userController.logout();
 //        System.out.println(CurrentUser.currentLoggedUser == null);
 
-     //   userController.cancelReservation(72,51);
+        //   userController.cancelReservation(72,51);
 
 //        try {
 //            Date dateFrom = null;
@@ -117,6 +121,6 @@ public class Main {
 //            e.printStackTrace();
 //        }
 
-        userController.cancelReservation(76,91);
+//        userController.cancelReservation(76,91);
     }
 }

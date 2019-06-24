@@ -10,28 +10,31 @@ import java.util.List;
 
 public class RoomService {
     RoomDAO roomDAO = new RoomDAO();
+    Room room = null;
+
     public Room save(Room room, User user) throws PermissionException {
         checkPermission(user);
         RoomDAO.save(room);
         return room;
     }
 
-    public void delete(long id, User user) throws PermissionException {
+    public void delete(long id, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkPermission(user);
-        try {
-            roomDAO.delete(id);
-        } catch (ObjectNotFoundInBDException e) {
-            System.out.println(e.getMessage());
+        room = roomDAO.findById(id);
+        if (room == null) {
+            throw new ObjectNotFoundInBDException("Room id : " + id + "not found in Data Base");
         }
+        roomDAO.delete(room);
     }
 
-    public Room update(Room room, User user) throws PermissionException {
+    public Room update(Room room, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkPermission(user);
-        try {
-            roomDAO.update(room);
-        } catch (ObjectNotFoundInBDException e) {
-            e.printStackTrace();
+
+        Room roomForUpdate = roomDAO.finByID(room.getId());
+        if (roomForUpdate == null) {
+            throw new ObjectNotFoundInBDException("Room id : " + room.getId() + "not found in Data Base");
         }
+        roomDAO.update(room);
         return room;
     }
 

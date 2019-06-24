@@ -9,34 +9,41 @@ import lesson4_hw.model.User;
 
 public class OrderService {
     OrderDAO orderDAO = new OrderDAO();
+
     public Order save(Order order, User user) throws PermissionException {
         checkIfUserLoggedIn(user);
         return orderDAO.save(order);
     }
 
     private void checkIfUserLoggedIn(User user) throws PermissionException {
-        if(CurrentUser.currentLoggedUser == null)
-            throw  new PermissionException("User is not logged in");
+        if (CurrentUser.currentLoggedUser == null)
+            throw new PermissionException("User is not logged in");
     }
 
 
-    public void delete(long id, User user) throws PermissionException {
+    public void delete(long id, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkIfUserLoggedIn(user);
-        try {
-            orderDAO.delete(id);
-        } catch (ObjectNotFoundInBDException e) {
-            System.out.println(e.getMessage());
+        cheskIfExist(id);
+        orderDAO.delete(id);
+
+    }
+
+    private void cheskIfExist(Long id) throws ObjectNotFoundInBDException {
+        if (findById(id) == null) {
+            throw new ObjectNotFoundInBDException("Ordwer id : " + id + "not found in Data Base");
         }
     }
 
-    public Order update(Order order,User user) throws PermissionException {
+
+    public Order update(Order order, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkIfUserLoggedIn(user);
-        try {
+
+        Order orderForUpdate = findById(order.getId());
+        if (orderForUpdate != null) {
             orderDAO.update(order);
-        } catch (ObjectNotFoundInBDException e) {
-            e.printStackTrace();
+            return order;
         }
-        return order;
+        throw new ObjectNotFoundInBDException("Order id : " + order.getId() + "not found in Data Base");
     }
 
     public Order findById(long id) {

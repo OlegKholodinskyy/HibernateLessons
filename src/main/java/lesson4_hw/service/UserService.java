@@ -22,28 +22,29 @@ public class UserService {
     OrderDAO orderDAO = new OrderDAO();
 
     public User save(User user) throws BadRequestException {
-        // 1-check if user is exist (by name);
-        // 2-save;
-        userDAO.checkIfUserNameisExist(user.getUserName());
+
+       if (userDAO.checkIfUserNameisExist(user.getUserName())){
+           throw new BadRequestException("User with name " + user.getUserName() + " is exist");
+       }
         userDAO.save(user);
         return user;
     }
 
-
-    public void delete(long id) {
-        try {
-            userDAO.delete(id);
-        } catch (ObjectNotFoundInBDException e) {
-            System.out.println(e.getMessage());
+    private void cheskIfExist(Long id) throws ObjectNotFoundInBDException {
+        if (findById(id) == null) {
+            throw new ObjectNotFoundInBDException("User id : " + id + "not found in Data Base");
         }
     }
 
-    public User update(User user) {
-        try {
-            userDAO.update(user);
-        } catch (ObjectNotFoundInBDException e) {
-            e.printStackTrace();
-        }
+    public void delete(long id) throws ObjectNotFoundInBDException {
+        cheskIfExist(id);
+        userDAO.delete(findById(id));
+
+    }
+
+    public User update(User user) throws ObjectNotFoundInBDException {
+        cheskIfExist(user.getId());
+        userDAO.update(user);
         return user;
     }
 
@@ -64,20 +65,18 @@ public class UserService {
     }
 
     public void bookRoom(long roomId, long userId, Date dateFrom, Date dateTo, double moneyPaid) throws ObjectNotFoundInBDException, BadRequestException {
-        /*
-        1 - find room
-        2 - check if dateFrom is more than in DataBase
-        3 - create order and update room    in one transaction
-         */
-        //find room
+
         Room currentRoom = roomDAO.finByID(roomId);
         if (currentRoom == null) {
             throw new ObjectNotFoundInBDException(" Room ID :" + roomId + " not found in DataBase");
         }
-        //check if dateFrom is more than in DataBase
         if (currentRoom.getDateAvailableFrom().getTime() > dateFrom.getTime()) {
             throw new BadRequestException(" Room ID :" + roomId + " not avialable in order period");
         }
+        if (orderDAO.findOrderByRoomIDUserID(roomId, userId) != null) {
+            throw new BadRequestException("Orders with USER_ID " + userId + " and ROOM_ID " + roomId + " now is active in DB. You can not order the same room multiple times. You should to cancel previous order first");
+        }
+
 
         Order order = new Order();
         order.setDateFrom(dateFrom);
@@ -127,8 +126,8 @@ public class UserService {
     }
 
     public void login(String userName, String password) throws BadRequestException {
-       User user =  userDAO.getUserByLoginAndPass (userName,password);
-        if (user != null){
+        User user = userDAO.getUserByLoginAndPass(userName, password);
+        if (user != null) {
             CurrentUser.currentLoggedUser = user;
         }
     }

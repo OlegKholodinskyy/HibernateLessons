@@ -10,8 +10,7 @@ import lesson4_hw.model.User;
 
 public class HotelService {
     HotelDAO hotelDAO = new HotelDAO();
-    UserDAO userDAO = new UserDAO();
-
+    Hotel hotel =null;
     public Hotel save(Hotel hotel, User user) throws BadRequestException, PermissionException {
         checkPermission(user);
 
@@ -21,23 +20,24 @@ public class HotelService {
         throw new BadRequestException("Hotel with name = " + hotel.getName() + " is already registred.");
     }
 
-    public void delete(long id, User user) throws PermissionException {
+    public void delete(long id, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkPermission(user);
-        try {
-            hotelDAO.delete(id);
-        } catch (ObjectNotFoundInBDException e) {
-            System.out.println(e.getMessage());
+        hotel = findById(id);
+        if (hotel != null) {
+            hotelDAO.delete(hotel);
         }
+        throw new ObjectNotFoundInBDException("Hotel id : " + id + "not found in Data Base");
     }
 
-    public Hotel update(Hotel hotel,User user) throws PermissionException {
+    public Hotel update(Hotel hotel, User user) throws PermissionException, ObjectNotFoundInBDException {
         checkPermission(user);
-        try {
-            hotelDAO.update(hotel);
-        } catch (ObjectNotFoundInBDException e) {
-            e.printStackTrace();
+
+        Hotel hotelForUpdate = findById(hotel.getId());
+        if (hotelForUpdate != null) {
+            hotelDAO.update(hotel, hotelForUpdate);
+            return hotel;
         }
-        return hotel;
+        throw new ObjectNotFoundInBDException("Hotel id : " + hotel.getId() + "not found in Data Base");
     }
 
     public Hotel findById(long id) {
@@ -45,7 +45,7 @@ public class HotelService {
     }
 
     private void checkPermission(User user) throws PermissionException {
-        if (user.getUserType().equals("USER") )
+        if (user.getUserType().equals("USER"))
             throw new PermissionException("User ID : " + user.getId() + "have not rights to make operation.");
     }
 }

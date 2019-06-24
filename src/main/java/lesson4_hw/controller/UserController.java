@@ -27,12 +27,21 @@ public class UserController implements ObjectController<User> {
 
     @Override
     public void delete(long id) {
-        userService.delete(id);
+        try {
+            userService.delete(id);
+        } catch (ObjectNotFoundInBDException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public User update(User user) {
-        return userService.update(user);
+    public User update(User user)  {
+        try {
+            return userService.update(user);
+        } catch (ObjectNotFoundInBDException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -66,7 +75,7 @@ public class UserController implements ObjectController<User> {
         try {
             userService.login(userName, password);
         } catch (BadRequestException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 

@@ -20,11 +20,12 @@ import java.util.List;
 
 
 public class OrderDAO extends SessionFactoryBuilder {
+    static RoomDAO roomDAO = new RoomDAO();
+
+
     public static Order save(Order order) {
-        Session session = null;
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             session.save(order);
@@ -35,27 +36,15 @@ public class OrderDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return order;
     }
 
-    /*
-    if one user try to order one room multiple times and the other orders is now active - catch exception
-    */
-    public static Order bookRoom(Order order, Date dateTo) throws BadRequestException {
 
-        if (findOrderByRoomIDUserID(order.getRoom().getId(), order.getUserOrdered().getId()) != null) {
-            throw new BadRequestException("Orders with USER_ID " + order.getUserOrdered().getId() + " and ROOM_ID " + order.getRoom().getId() + " now is active in DB. You can not order the same room multiple times. You should to cancel previous order first");
-        }
+    public static Order bookRoom(Order order, Date dateTo) {
 
-        RoomDAO roomDAO = new RoomDAO();
-        Session session = null;
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             save(order);
@@ -67,23 +56,15 @@ public class OrderDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return order;
-
     }
 
-    public void delete(long id) throws ObjectNotFoundInBDException {
+    public void delete(long id) {
         Order order = findById(id);
-        if (order == null) {
-            throw new ObjectNotFoundInBDException("Order id : " + id + "not found in Data Base");
-        }
-        Session session = null;
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             session.delete(order);
@@ -94,25 +75,18 @@ public class OrderDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
     }
 
-    public void update(Order order) throws ObjectNotFoundInBDException {
+    public void update(Order order) {
             /*
             1-found order
             2-update if exist
              */
         Order orderForUpdate = findById(order.getId());
-        if (orderForUpdate == null) {
-            throw new ObjectNotFoundInBDException("Order with id : " + order.getId() + "not found in Data Base");
-        }
-        Session session = null;
+
         Transaction tr = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             orderForUpdate.setRoom(order.getRoom());
@@ -129,18 +103,13 @@ public class OrderDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
     }
 
     public Order findById(long id) {
-        Session session = null;
         Transaction tr = null;
         Order order = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             order = session.get(Order.class, id);
@@ -150,54 +119,51 @@ public class OrderDAO extends SessionFactoryBuilder {
             if (tr != null) {
                 tr.rollback();
             }
-        } finally {
-            if (session != null)
-                session.close();
         }
         return order;
     }
 
     public static Order findOrderByRoomIDUserID(long roomId, long userId) {
-        Session session = null;
         Transaction tr = null;
         Order order = null;
 
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
-            Query sqlQuery = session.createSQLQuery("SELECT * FROM ORDERS WHERE USER_ID = ? AND ROOM_ID = ? AND AVIALABLE = 1  ").addEntity(Order.class);
-            sqlQuery.setParameter(0, userId);
-            sqlQuery.setParameter(1, roomId);
 
-            // todo check
-            try {
-                order = (Order) sqlQuery.getSingleResult();
-                tr.commit();
-            } catch (NoResultException e) {
-                return null;
+            List<Order> orders = findAll();
+            for (Order order1 : orders) {
+                if (order1.getRoom().getId().equals(roomId) && order1.getUserOrdered().getId().equals(userId)) {
+                    return order1;
+                }
             }
-
-        } catch (HibernateException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            if (session != null) {
-                session.close();
-            }
+            tr.commit();
         }
-        return order;
+        return null;
     }
 
-// todo (Why this query not work in Idea but work in Oracle Developer?????)
-//  SELECT MAX(DATE_TO) FROM ORDERS WHERE USER_ID = 51 AND ROOM_ID = 72 AND AVIALABLE = 0;
+    private static List<Order> findAll() {
+        Transaction tr = null;
+        List<Order> orders = null;
+        try (Session session = createSessionFactory().openSession()) {
+            tr = session.getTransaction();
+            tr.begin();
+            Query sqlQuery = session.createSQLQuery("SELECT * FROM ORDERS").addEntity(Order.class);
+            orders = sqlQuery.list();
+        } catch (HibernateException e) {
+            System.out.println(e.getMessage());
+            if (tr != null) {
+                tr.rollback();
+            }
+        }
+        return orders;
+    }
 
     public static Date findDateAvialableRoomBeforeCurrentOrder(Order order) {
-        Session session = null;
         Transaction tr = null;
         List<Order> orders = null;
         Order preLastOrder = null;
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             Query sqlQuery = session.createSQLQuery("SELECT * FROM ORDERS WHERE USER_ID = ? AND ROOM_ID = ? AND AVIALABLE = 0 ORDER BY DATE_TO DESC").addEntity(Order.class);
@@ -207,11 +173,8 @@ public class OrderDAO extends SessionFactoryBuilder {
             tr.commit();
         } catch (HibernateException e) {
             System.out.println(e.getMessage());
-        } finally {
-            if (session != null) {
-                session.close();
-            }
         }
+
         // if previous Order is exist -> retutn his dateTo
         // else -> return curent date
         if (orders != null && !orders.isEmpty()) {
@@ -223,11 +186,9 @@ public class OrderDAO extends SessionFactoryBuilder {
     }
 
     public void cancelOrder(Order order, long roomId, Date previousDateAvialable) throws ObjectNotFoundInBDException {
-        Session session = null;
+
         Transaction tr = null;
-        RoomDAO roomDAO = new RoomDAO();
-        try {
-            session = createSessionFactory().openSession();
+        try (Session session = createSessionFactory().openSession()) {
             tr = session.getTransaction();
             tr.begin();
             order.setAvialable(false);
@@ -238,10 +199,6 @@ public class OrderDAO extends SessionFactoryBuilder {
             tr.commit();
         } catch (HibernateException e) {
             System.out.println(e.getMessage());
-        } finally {
-            if (session != null) {
-                session.close();
-            }
         }
     }
 }
